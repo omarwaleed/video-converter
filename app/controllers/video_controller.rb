@@ -8,8 +8,7 @@ class VideoController < ApplicationController
     movie = FFMPEG::Movie.new(params[:video].tempfile.path)
     render json: movie
 
-    deleted = File.delete(params[:video].tempfile.path)
-    puts "Deleted ", deleted
+    UploadFileCleanupJob.perform_later params[:video].tempfile.path
   end
 
   def convert
