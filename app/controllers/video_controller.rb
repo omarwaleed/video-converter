@@ -7,7 +7,7 @@ class VideoController < ApplicationController
   def check
     movie = FFMPEG::Movie.new(params[:video].tempfile.path)
     puts '----------'
-    puts is_valid_video_type?(movie.video_codec)
+    puts valid_video_type?(movie.video_codec)
     puts movie.video_codec
     puts '----------'
     render json: movie
@@ -19,6 +19,7 @@ class VideoController < ApplicationController
 
     puts request
     print_memory{puts 'In convert route'}
+
     render json: params[:video]
 
   end
@@ -33,7 +34,7 @@ class VideoController < ApplicationController
     puts 'RAM USAGE: ' + `pmap #{Process.pid} | tail -1`[10,40].strip
   end
 
-  def is_valid_video_type?(codec)
+  def valid_video_type?(codec)
     !!(codec == "mov" || codec == "mp4" || codec == "3gp" || codec == "flv" || codec == "wmv" || codec == "avi")
   end
 
