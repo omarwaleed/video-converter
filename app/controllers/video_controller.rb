@@ -28,7 +28,7 @@ class VideoController < ApplicationController
       return render status: 400, json: {
         error: "Target format not provided"
       }
-    elsif params[:target_format] != "mp4" || params[:target_format] != "flv"
+    elsif params[:target_format] != "mp4" && params[:target_format] != "flv"
       return render status: 400, json: {
         error: "Target format not allowed. Only mp4 and flv are allowed"
       }
