@@ -36,14 +36,14 @@ class VideoController < ApplicationController
 
     converted_path = "/tmp/converted-"+Random.new_seed.to_s+"."+params[:target_format]
     begin
-      convertion_thread = Thread.new {
+      Thread.new {
         converted = movie.transcode(converted_path){ |progress| puts progress * 100 }
-        puts converted
-        send_file converted, {filename: "Converted movie"}
-        puts '////////////////', converted, '////////////////'
+        puts converted.inspect
+        puts "----------", converted.path, "---------"
+        send_file converted.path, filename: "Converted movie", status: 200
+        puts "======= sent"
         UploadFileCleanupJob.perform_later params[:video].tempfile.path
-      }
-      convertion_thread.join
+      }.join
     rescue => exception
       response status: 500
     end
