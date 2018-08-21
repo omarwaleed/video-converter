@@ -41,14 +41,14 @@ class VideoController < ApplicationController
         converted = movie.transcode(converted_path, {resolution: "320x240"}){ |progress| puts progress * 100 }
         puts converted.inspect
         puts "----------", converted.path, "---------"
-        puts "======= sent"
-        puts Thread.current.inspect
+        # puts "======= sent"
+        # puts Thread.current.inspect
       }
-      UploadFileCleanupJob.perform_later params[:video].tempfile.path
       conversion_thread.join
-      puts conversion_thread.status
-      # send_file(converted.path, filename: "Converted movie")
-      render json: {error: nil, message: "Converted"}
+      UploadFileCleanupJob.perform_later params[:video].tempfile.path
+      # puts conversion_thread.status
+      send_file(converted.path, filename: "Converted movie")
+      # render json: {error: nil, message: "Converted"}
     # rescue => exception
     #   response status: 500
     # end
