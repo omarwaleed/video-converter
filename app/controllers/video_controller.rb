@@ -6,10 +6,7 @@ class VideoController < ApplicationController
 
   def check
     movie = FFMPEG::Movie.new(params[:video].tempfile.path)
-    puts '----------'
-    puts valid_video_type?(movie.video_codec)
-    puts movie.video_codec
-    puts '----------'
+    puts '----------', valid_video_type?(movie.video_codec), movie.video_codec, '----------'
     render json: movie
 
     UploadFileCleanupJob.perform_later params[:video].tempfile.path
@@ -17,10 +14,32 @@ class VideoController < ApplicationController
 
   def convert
 
-    puts request
-    print_memory{puts 'In convert route'}
+    movie = FFMPEG::Movie.new(params[:video].tempfile.path)
 
-    render json: params[:video]
+    
+    if !valid_video_type?(movie.video_codec)
+      puts "codec------------", movie.video_codec, movie.inspect
+      return render status: 400, json: {
+        error: "Invalid file format. Only mov, mp4, 3gp, flv, wmv, avi are allowed"
+      }
+    end
+    
+    if params[:target_format].blank?
+      return render status: 400, json: {
+        error: "Target format not provided"
+      }
+    elsif params[:target_format] != "mp4" || params[:target_format] != "flv"
+      return render status: 400, json: {
+        error: "Target format not allowed. Only mp4 and flv are allowed"
+      }
+    end
+
+    converted_path = "/tmp/converted-"+Random.new_seed+"."+params[:target_format]
+    converted = movie.transcode(converted_path){ |progress| puts progress * 100 }
+
+    puts '////////////////', converted, '////////////////'
+
+    UploadFileCleanupJob.perform_later params[:video].tempfile.path
 
   end
 
@@ -35,7 +54,7 @@ class VideoController < ApplicationController
   end
 
   def valid_video_type?(codec)
-    !!(codec == "mov" || codec == "mp4" || codec == "3gp" || codec == "flv" || codec == "wmv" || codec == "avi")
+    ["mov", "mp4", "3gp", "flv", "wmv", "avi", "h264"].include?(codec)
   end
 
 end
